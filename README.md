@@ -8,7 +8,7 @@ This project is Software Projects in classroom
 	
 ## Technologies
 Project is created with:
-* Gin
+* Go Gin
 * MongoDB
 
 	

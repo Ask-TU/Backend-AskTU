@@ -170,7 +170,7 @@ func Login() gin.HandlerFunc {
 	}
 }
 
-func GetUsers() gin.HandlerFunc {
+func GetAllUsers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := helper.CheckUserType(c, "ADMIN"); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -237,6 +237,7 @@ func GetUser() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, user)
+		fmt.Println(user)
 
 	}
 }

@@ -1,0 +1,10 @@
+{
+    "first_name": "YOUR_FIRST_NAME",
+    "last_name": "YOUR_LAST_NAME",
+    "nick_name" : "YOUR NICKNAME",
+    "email":"YOUR EMAIL",
+    "password" :"YOUR PASSWORD",
+    "phone":"YOUR PHONE NUMBER",
+    "student_id":"YOUR STUDENT ID",
+    "user_type":"USER"
+}

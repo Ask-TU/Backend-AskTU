@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SubjectRoutes(router *gin.Engine) {
+func ClassRoomRoutes(router *gin.Engine) {
 
 	router.Use(middleware.Authentication())
 	//routes for version 1 is ready for use

@@ -1,6 +1,7 @@
 package routes
 
 import (
+	controller "exmaple/Backendasktu/controllers/classroom"
 	middleware "exmaple/Backendasktu/middleware"
 	"net/http"
 
@@ -14,6 +15,7 @@ func ClassRoomRoutes(router *gin.Engine) {
 	v1 := router.Group("api/v1")
 	{
 		v1.GET("/posts", func(c *gin.Context) {
+			controller.CreateClassroom()
 			c.JSON(http.StatusOK, gin.H{"message": "Retrieving posts in version 1"})
 		})
 		v1.GET("/comments", func(c *gin.Context) {

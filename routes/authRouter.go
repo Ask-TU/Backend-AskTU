@@ -7,7 +7,7 @@ import (
 )
 
 // UserRoutes function
-func AuthRoutes(incomingRoutes *gin.Engine) {
-	incomingRoutes.POST("/auth/signup", controller.SignUp())
-	incomingRoutes.POST("/auth/login", controller.Login())
+func AuthRoutes(router *gin.Engine) {
+	router.POST("/auth/signup", controller.SignUp())
+	router.POST("/auth/login", controller.Login())
 }

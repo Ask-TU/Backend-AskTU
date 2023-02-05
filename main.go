@@ -11,7 +11,7 @@ func main() {
 	port := os.Getenv("PORT")
 
 	if port == "" {
-		port = "8000"
+		port = "8080"
 	}
 
 	router := gin.New()
@@ -20,15 +20,14 @@ func main() {
 	routes.AuthRoutes(router)
 	routes.UserRoutes(router)
 
-	// API-2
-	router.GET("/api-1", func(c *gin.Context) {
+	// api version 1 is production ready
+	router.GET("/api/v1", func(c *gin.Context) {
 
 		c.JSON(200, gin.H{"success": "Access granted for api-1"})
 
 	})
-
-	// API-1
-	router.GET("/api-2", func(c *gin.Context) {
+	// api version 2 on development process
+	router.GET("/api/v2", func(c *gin.Context) {
 		c.JSON(200, gin.H{"success": "Access granted for api-2"})
 	})
 

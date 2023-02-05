@@ -23,7 +23,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
+var userCollection *mongo.Collection = database.OpenCollection(database.Client, "users")
 var validate = validator.New()
 
 // HashPassword is used to encrypt the password before it is stored in the DB

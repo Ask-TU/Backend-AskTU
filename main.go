@@ -1,41 +1,36 @@
 package main
 
 import (
-	"BackendAskTU/controllers/users"
-	"BackendAskTU/databases"
-	"net/http"
+	routes "exmaple/Backendasktu/routes"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
 
-type album struct {
-	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
-}
-
-var albums = []album{
-	{ID: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-	{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
-}
-
 func main() {
-	router := gin.Default()
+	port := os.Getenv("PORT")
 
-	//run database connection
-	databases.ConnectDB()
-	users.Create()
-	router.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello World! this Go Gin Backend API for ASK TU")
+	if port == "" {
+		port = "8000"
+	}
+
+	router := gin.New()
+	router.Use(gin.Logger())
+
+	routes.AuthRoutes(router)
+	routes.UserRoutes(router)
+
+	// API-2
+	router.GET("/api-1", func(c *gin.Context) {
+
+		c.JSON(200, gin.H{"success": "Access granted for api-1"})
+
 	})
 
-	router.GET("/albums", getAlbums)
+	// API-1
+	router.GET("/api-2", func(c *gin.Context) {
+		c.JSON(200, gin.H{"success": "Access granted for api-2"})
+	})
 
-	router.Run("localhost:8080")
-}
-
-func getAlbums(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, albums)
+	router.Run(":" + port)
 }

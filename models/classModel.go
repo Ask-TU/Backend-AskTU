@@ -1,6 +1,6 @@
 package models
 
-type Class struct {
+type AllClass struct {
 	Subject_name string     `json:"subject_name"`
 	Class_owner  string     `json:"class_owner"`
 	Question     []Question `json:"question"`

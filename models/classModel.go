@@ -13,7 +13,7 @@ type AllClass struct {
 	Created_at   time.Time          `json:"created_at"`
 	Updated_at   time.Time          `json:"updated_at"`
 	Question     []Question         `json:"question"`
-	Member       []Member           `json:"member"`
+	Members      []Member           `json:"member"`
 }
 
 type Question struct {

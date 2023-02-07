@@ -8,6 +8,7 @@ import (
 
 type AllClass struct {
 	ID           primitive.ObjectID `bson:"_id"`
+	Main_id      string             `json:"main_id"`
 	Subject_name string             `json:"subject_name"`
 	Class_owner  string             `json:"class_owner"`
 	Created_at   time.Time          `json:"created_at"`
@@ -20,17 +21,19 @@ type Question struct {
 	ID         primitive.ObjectID `bson:"_id"`
 	Content    string             `json:"question"`
 	Owner      string             `json:"owner"`
+	Class_id   string             `json:"class_id"`
 	Created_at time.Time          `json:"created_at"`
 	Updated_at time.Time          `json:"updated_at"`
 	Answer     []Answer           `json:"answer"`
 }
 
 type Answer struct {
-	ID         primitive.ObjectID `bson:"_id"`
-	Content    string             `json:"answer"`
-	Owner      string             `json:"owner"`
-	Created_at time.Time          `json:"created_at"`
-	Updated_at time.Time          `json:"updated_at"`
+	ID          primitive.ObjectID `bson:"_id"`
+	Content     string             `json:"answer"`
+	Owner       string             `json:"owner"`
+	Question_id string             `json:"question_id"`
+	Created_at  time.Time          `json:"created_at"`
+	Updated_at  time.Time          `json:"updated_at"`
 }
 
 type Member struct {

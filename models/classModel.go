@@ -1,16 +1,30 @@
 package models
 
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
 type AllClass struct {
-	Subject_name string     `json:"subject_name"`
-	Class_owner  string     `json:"class_owner"`
-	Question     []Question `json:"question"`
-	Member       []member   `json:"member"`
+	ID           primitive.ObjectID `bson:"_id"`
+	Subject_name string             `json:"subject_name"`
+	Class_owner  string             `json:"class_owner"`
+	Created_at   time.Time          `json:"created_at"`
+	Updated_at   time.Time          `json:"updated_at"`
+	Question     []Question         `json:"question"`
+	Member       []Member           `json:"member"`
 }
 
 type Question struct {
-	Question string `json:"question"`
+	ID         primitive.ObjectID `bson:"_id"`
+	Content    string             `json:"question"`
+	Owner      string             `json:"owner"`
+	Created_at time.Time          `json:"created_at"`
+	Updated_at time.Time          `json:"updated_at"`
 }
 
-type member struct {
-	Member string `json:"member"`
+type Member struct {
+	ID        primitive.ObjectID `bson:"_id"`
+	ClassRoom string             `json:"classroom"`
 }

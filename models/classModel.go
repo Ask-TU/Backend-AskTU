@@ -22,6 +22,15 @@ type Question struct {
 	Owner      string             `json:"owner"`
 	Created_at time.Time          `json:"created_at"`
 	Updated_at time.Time          `json:"updated_at"`
+	Answer     []Answer           `json:"answer"`
+}
+
+type Answer struct {
+	ID         primitive.ObjectID `bson:"_id"`
+	Content    string             `json:"answer"`
+	Owner      string             `json:"owner"`
+	Created_at time.Time          `json:"created_at"`
+	Updated_at time.Time          `json:"updated_at"`
 }
 
 type Member struct {

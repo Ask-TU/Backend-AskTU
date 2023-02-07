@@ -1,11 +1,23 @@
 package controllers
 
 import (
-	"exmaple/Backendasktu/models"
+	"context"
+	"fmt"
+
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"exmaple/Backendasktu/database"
+
+	"exmaple/Backendasktu/models"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+var classroomCollection *mongo.Collection = database.OpenCollection(database.Client, "classrooms")
 
 var class = []models.AllClass{
 	{Main_id: "1",
@@ -51,18 +63,26 @@ func GetQuestion() gin.HandlerFunc {
 
 func CreateClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		var new_class models.AllClass
-
-		if err := c.ShouldBindJSON(&new_class); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		newUser := models.AllClass{
+			ID:           primitive.NewObjectID(),
+			Subject_name: "eiei",
+			Class_owner:  "user.Name",
+			Created_at:   time.Now(),
+			Updated_at:   time.Now(),
+			Question:     []models.Question{},
+			Members:      []models.Member{},
 		}
 
-		class = append(class, new_class)
-		c.JSON(http.StatusCreated, class)
+		result, err := classroomCollection.InsertOne(ctx, newUser)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, "error")
+			return
+		}
+		fmt.Print(result)
+		c.JSON(http.StatusCreated, "success")
+
 	}
 }
 

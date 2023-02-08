@@ -65,10 +65,24 @@ func CreateClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
+		var newclass models.AllClass
+
+		if err := c.BindJSON(&newclass); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		validationErr := validate.Struct(&newclass)
+		if validationErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
+			return
+		}
+
 		newUser := models.AllClass{
 			ID:           primitive.NewObjectID(),
-			Subject_name: "eiei",
-			Class_owner:  "user.Name",
+			Main_id: 	  newclass.Main_id,
+			Subject_name: newclass.Subject_name,
+			Class_owner:  newclass.Class_owner,
 			Created_at:   time.Now(),
 			Updated_at:   time.Now(),
 			Question:     []models.Question{},

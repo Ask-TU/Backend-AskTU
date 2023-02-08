@@ -3,6 +3,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"log"
+	"strconv"
 
 	"net/http"
 	"time"
@@ -13,6 +15,7 @@ import (
 
 	"exmaple/Backendasktu/models"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -51,14 +54,77 @@ var class = []models.AllClass{
 
 func GetClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, class)
+		classId := c.Param("classId")
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+
+		var class1 models.AllClass
+		objId, _ := primitive.ObjectIDFromHex(classId)
+
+		err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&class1)
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, class1)
+		fmt.Println(class1)
+	}
+}
+func GetAllClassroom() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		// recordPerPage := 10
+		recordPerPage, err := strconv.Atoi(c.Query("recordPerPage"))
+		if err != nil || recordPerPage < 1 {
+			recordPerPage = 10
+		}
+
+		page, err1 := strconv.Atoi(c.Query("page"))
+		if err1 != nil || page < 1 {
+			page = 1
+		}
+
+		startIndex := (page - 1) * recordPerPage
+		startIndex, err = strconv.Atoi(c.Query("startIndex"))
+
+		matchStage := bson.D{{"$match", bson.D{{}}}}
+		groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"_id", "null"}}}, {"total_count", bson.D{{"$sum", 1}}}, {"data", bson.D{{"$push", "$$ROOT"}}}}}}
+		projectStage := bson.D{
+			{"$project", bson.D{
+				{"_id", 0},
+				{"total_count", 1},
+				{"class_items", bson.D{{"$slice", []interface{}{"$data", startIndex, recordPerPage}}}},
+			}}}
+
+		result, err := classroomCollection.Aggregate(ctx, mongo.Pipeline{
+			matchStage, groupStage, projectStage})
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while listing user items"})
+		}
+		var allClass []bson.M
+		if err = result.All(ctx, &allClass); err != nil {
+			log.Fatal(err)
+		}
+		c.JSON(http.StatusOK, allClass[0])
+
 	}
 }
 
+func AllQuestion(classes []models.AllClass) []models.Question {
+    var allQuestions []models.Question
+    for _, class := range classes {
+        allQuestions = append(allQuestions, class.Question...)
+    }
+    return allQuestions
+}
+
 func GetQuestion() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, class[0].Question[0:])
-	}
+    return func(c *gin.Context) {
+        c.JSON(http.StatusOK, AllQuestion(class))
+    }
 }
 
 func CreateClassroom() gin.HandlerFunc {
@@ -80,7 +146,7 @@ func CreateClassroom() gin.HandlerFunc {
 
 		newUser := models.AllClass{
 			ID:           primitive.NewObjectID(),
-			Main_id: 	  newclass.Main_id,
+			Main_id:      newclass.Main_id,
 			Subject_name: newclass.Subject_name,
 			Class_owner:  newclass.Class_owner,
 			Created_at:   time.Now(),

@@ -31,9 +31,10 @@ func ClassRoomRoutes(router *gin.Engine) {
 			c.JSON(http.StatusOK, gin.H{"message": "Retrieving commetns in version 2"})
 		})
 
-		v2.GET("/class", controllers.GetClassroom())
-
+		
+		v2.GET("/class", controllers.GetAllClassroom())
 		v2.POST("/class", controllers.CreateClassroom())
+		v2.GET("/class/:classId", controllers.GetClassroom())
 
 		v2.DELETE("/class/:id", controllers.DeleteClassroom())
 

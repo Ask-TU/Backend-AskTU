@@ -18,13 +18,14 @@ type AllClass struct {
 }
 
 type Question struct {
-	ID         primitive.ObjectID `bson:"_id"`
-	Content    string             `json:"question"`
-	Owner      string             `json:"owner"`
-	Class_id   string             `json:"class_id"`
-	Created_at time.Time          `json:"created_at"`
-	Updated_at time.Time          `json:"updated_at"`
-	Answer     []Answer           `json:"answer"`
+	ID          primitive.ObjectID `bson:"_id"`
+	Content     string             `json:"question"`
+	Owner       string             `json:"owner"`
+	Question_id string             `json:"question_id"`
+	Class_id    string             `json:"class_id"`
+	Created_at  time.Time          `json:"created_at"`
+	Updated_at  time.Time          `json:"updated_at"`
+	Answer      []Answer           `json:"answer"`
 }
 
 type Answer struct {

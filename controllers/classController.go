@@ -200,18 +200,18 @@ func UpdateClassromm() gin.HandlerFunc {
 
         objId, _ := primitive.ObjectIDFromHex(classId)
 		
-		if err := c.BindJSON(&classId); err != nil {
+		if err := c.BindJSON(&class1); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error1": err.Error()})
 			return
 		}
 
-		validationErr := validate.Struct(&classId)
+		validationErr := validate.Struct(&class1)
 		if validationErr != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error2": validationErr.Error()})
 			return
 		}
 
-
+		
 		update := bson.M{"main_id": class1.Main_id, "subject_name": class1.Subject_name, "class_owner": class1.Class_owner}
 		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
 

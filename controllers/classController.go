@@ -168,15 +168,66 @@ func CreateClassroom() gin.HandlerFunc {
 
 func DeleteClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id := c.Param("id")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        classId := c.Param("classId")
+        defer cancel()
 
-		for i, a := range class {
-			if a.Main_id == id {
-				class = append(class[:i], class[i+1:]...)
-				break
-			}
+        objId, _ := primitive.ObjectIDFromHex(classId)
+
+        result, err := classroomCollection.DeleteOne(ctx, bson.M{"_id": objId})
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, "error")
+			return
 		}
 
-		c.Status(http.StatusNoContent)
+		if result.DeletedCount < 1 {
+			c.JSON(http.StatusNotFound, err.Error())
+			return
+		}
+
+		c.JSON(http.StatusOK,"deleted success")
+
+	}
+}
+
+func UpdateClassromm() gin.HandlerFunc {
+	return func(c *gin.Context){
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+        classId := c.Param("classId")
+		var class1  models.AllClass
+        defer cancel()
+
+        objId, _ := primitive.ObjectIDFromHex(classId)
+		
+		if err := c.BindJSON(&classId); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error1": err.Error()})
+			return
+		}
+
+		validationErr := validate.Struct(&classId)
+		if validationErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error2": validationErr.Error()})
+			return
+		}
+
+
+		update := bson.M{"main_id": class1.Main_id, "subject_name": class1.Subject_name, "class_owner": class1.Class_owner}
+		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, "error3")
+			return
+		}
+		var updatedClass models.AllClass
+        if result.MatchedCount == 1 {
+            err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&updatedClass)
+            if err != nil {
+                c.JSON(http.StatusInternalServerError, "cannot update")
+                return
+            }
+        }
+
+        c.JSON(http.StatusOK, "update success")
 	}
 }

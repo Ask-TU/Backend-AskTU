@@ -103,7 +103,6 @@ func CreateClassroom() gin.HandlerFunc {
 
 		newUser := models.AllClass{
 			ID:           primitive.NewObjectID(),
-			Main_id:      newclass.Main_id,
 			Subject_name: newclass.Subject_name,
 			Class_owner:  newclass.Class_owner,
 			Created_at:   time.Now(),
@@ -168,7 +167,7 @@ func UpdateClassromm() gin.HandlerFunc {
 			return
 		}
 
-		update := bson.M{"main_id": class1.Main_id, "subject_name": class1.Subject_name, "class_owner": class1.Class_owner}
+		update := bson.M{"subject_name": class1.Subject_name, "class_owner": class1.Class_owner}
 		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
 
 		if err != nil {

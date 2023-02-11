@@ -34,6 +34,7 @@ func ClassRoomRoutes(router *gin.Engine) {
 		v2.GET("/class", controllers.GetAllClassroom())
 		v2.POST("/class", controllers.CreateClassroom())
 		v2.GET("/class/:classId", controllers.GetClassroom())
+		v2.PUT("/class/:classId", controllers.UpdateClassromm())
 
 		v2.DELETE("/class/:classId", controllers.DeleteClassroom())
 

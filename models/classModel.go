@@ -8,7 +8,6 @@ import (
 
 type AllClass struct {
 	ID           primitive.ObjectID `bson:"_id"`
-	Main_id      string             `json:"main_id"`
 	Subject_name string             `json:"subject_name"`
 	Class_owner  string             `json:"class_owner"`
 	Created_at   time.Time          `json:"created_at"`

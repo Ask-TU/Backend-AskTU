@@ -21,6 +21,7 @@ import (
 )
 
 var classroomCollection *mongo.Collection = database.OpenCollection(database.Client, "classrooms")
+var answerCollection *mongo.Collection = database.OpenCollection(database.Client, "answers")
 
 func GetClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -308,5 +309,97 @@ func GetAllQuestions() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, questions)
+	}
+}
+
+func CreateAnswer() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		var newAnswer models.Answer
+
+		if err := c.BindJSON(&newAnswer); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		newRespon := models.Answer{
+			ID:          primitive.NewObjectID(),
+			Content:     newAnswer.Content,
+			Owner:       newAnswer.Owner,
+			Question_id: newAnswer.Question_id,
+			Answer_id:   newAnswer.Answer_id,
+			Created_at:  time.Now(),
+			Updated_at:  time.Now(),
+		}
+
+		result, err := answerCollection.InsertOne(ctx, newRespon)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, "error")
+			return
+		}
+		fmt.Print(result)
+		c.JSON(http.StatusCreated, "success")
+
+	}
+}
+
+func GetAllAnswer() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		allans, err := strconv.Atoi(c.Query("allans"))
+		if err != nil || allans < 1 {
+			allans = 10
+		}
+
+		face, err1 := strconv.Atoi(c.Query("face"))
+		if err1 != nil || face < 1 {
+			face = 1
+		}
+
+		startIndex := (face - 1) * allans
+		startIndex, err = strconv.Atoi(c.Query("startIndex"))
+
+		matchStage := bson.D{{"$match", bson.D{{}}}}
+		groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"_id", "null"}}}, {"total_count", bson.D{{"$sum", 1}}}, {"data", bson.D{{"$push", "$$ROOT"}}}}}}
+		projectStage := bson.D{
+			{"$project", bson.D{
+				{"_id", 0},
+				{"total_count", 1},
+				{"class_items", bson.D{{"$slice", []interface{}{"$data", startIndex, allans}}}},
+			}}}
+
+		result, err := answerCollection.Aggregate(ctx, mongo.Pipeline{
+			matchStage, groupStage, projectStage})
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while listing user items"})
+		}
+		var allanswers []bson.M
+		if err = result.All(ctx, &allanswers); err != nil {
+			log.Fatal(err)
+		}
+		c.JSON(http.StatusOK, allanswers[0])
+	}
+}
+
+func GetAnswerInQuestion() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		answerID := c.Param("answerID")
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+
+		var answer1 models.Answer
+		AnsId, _ := primitive.ObjectIDFromHex(answerID)
+
+		err := answerCollection.FindOne(ctx, bson.M{"_id": AnsId}).Decode(&answer1)
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, answer1)
+		fmt.Println(answer1)
 	}
 }

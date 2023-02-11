@@ -35,6 +35,7 @@ type Answer struct {
 	Question_id string             `json:"question_id"`
 	Created_at  time.Time          `json:"created_at"`
 	Updated_at  time.Time          `json:"updated_at"`
+	Answer_id   string             `json:"answer_id"`
 }
 
 type Member struct {

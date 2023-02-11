@@ -23,7 +23,7 @@ func main() {
 
 	routes.AuthRoutes(router)
 	routes.UserRoutes(router)
-	routes.ClassRoomRoutes(router)
+	routes.ClassRoutes(router)
 
 	router.Run(":" + port)
 }

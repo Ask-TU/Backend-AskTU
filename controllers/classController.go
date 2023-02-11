@@ -12,8 +12,11 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"exmaple/Backendasktu/database"
+	"exmaple/Backendasktu/helpers"
 
 	"exmaple/Backendasktu/models"
+
+	"exmaple/Backendasktu/responses"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,7 +24,58 @@ import (
 )
 
 var classroomCollection *mongo.Collection = database.OpenCollection(database.Client, "classrooms")
-var answerCollection *mongo.Collection = database.OpenCollection(database.Client, "answers")
+
+func CreateClassroom() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		var class models.Classrooms
+
+		if err := c.BindJSON(&class); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		validationErr := validate.Struct(&class)
+		if validationErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
+			return
+		}
+
+		count, err := classroomCollection.CountDocuments(ctx, bson.M{"subject_name": class.Subject_name})
+		if err != nil {
+			log.Panic(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the Class room"})
+			return
+		}
+
+		if count > 0 {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "The Class has already exists"})
+			return
+		}
+
+		newClass := models.Classrooms{
+			ID:           primitive.NewObjectID(),
+			Class_id:     helpers.GenerateID(),
+			Subject_name: class.Subject_name,
+			Class_owner:  class.Class_owner,
+			Created_at:   time.Now(),
+			Updated_at:   time.Now(),
+			Questions:    class.Questions,
+			Members:      class.Members,
+		}
+
+		result, err := classroomCollection.InsertOne(ctx, newClass)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, "error")
+			return
+		}
+		fmt.Print(result)
+		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": newClass}})
+
+	}
+}
 
 func GetClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -29,18 +83,18 @@ func GetClassroom() gin.HandlerFunc {
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 
-		var class1 models.AllClass
+		var oldClass models.Classrooms
 		objId, _ := primitive.ObjectIDFromHex(classId)
 
-		err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&class1)
+		err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
 		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, class1)
-		fmt.Println(class1)
+		c.JSON(http.StatusOK, oldClass)
+		fmt.Println(oldClass)
 	}
 }
 func GetAllClassroom() gin.HandlerFunc {
@@ -83,45 +137,6 @@ func GetAllClassroom() gin.HandlerFunc {
 
 	}
 }
-
-func CreateClassroom() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		var newclass models.AllClass
-
-		if err := c.BindJSON(&newclass); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		validationErr := validate.Struct(&newclass)
-		if validationErr != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
-			return
-		}
-
-		newUser := models.AllClass{
-			ID:           primitive.NewObjectID(),
-			Subject_name: newclass.Subject_name,
-			Class_owner:  newclass.Class_owner,
-			Created_at:   time.Now(),
-			Updated_at:   time.Now(),
-			Question:     []models.Question{},
-			Members:      []models.Member{},
-		}
-
-		result, err := classroomCollection.InsertOne(ctx, newUser)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, "error")
-			return
-		}
-		fmt.Print(result)
-		c.JSON(http.StatusCreated, "success")
-
-	}
-}
-
 func DeleteClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -142,39 +157,37 @@ func DeleteClassroom() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, "deleted success")
-
+		c.JSON(http.StatusOK, responses.DeleteResponse{Status: http.StatusOK, Message: "Deleted Successfully"})
 	}
 }
-
 func UpdateClassromm() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		classId := c.Param("classId")
-		var class1 models.AllClass
+		var oldClass models.Classrooms
 		defer cancel()
 
 		objId, _ := primitive.ObjectIDFromHex(classId)
 
-		if err := c.BindJSON(&class1); err != nil {
+		if err := c.BindJSON(&oldClass); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error1": err.Error()})
 			return
 		}
 
-		validationErr := validate.Struct(&class1)
+		validationErr := validate.Struct(&oldClass)
 		if validationErr != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error2": validationErr.Error()})
 			return
 		}
 
-		update := bson.M{"subject_name": class1.Subject_name, "class_owner": class1.Class_owner}
+		update := bson.M{"class_id": oldClass.Class_id, "subject_name": oldClass.Subject_name, "class_owner": oldClass.Class_owner, "members": oldClass.Members, "questions": oldClass.Questions}
 		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, "error3")
 			return
 		}
-		var updatedClass models.AllClass
+		var updatedClass models.Classrooms
 		if result.MatchedCount == 1 {
 			err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&updatedClass)
 			if err != nil {
@@ -183,222 +196,6 @@ func UpdateClassromm() gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(http.StatusOK, "update success")
-	}
-}
-
-func CreateQuestion() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		classId := c.Param("classId")
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		objId, _ := primitive.ObjectIDFromHex(classId)
-
-		var class1 models.AllClass
-
-		err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&class1)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		var newQuestion models.Question
-
-		newQuestion = models.Question{
-			ID:          primitive.NewObjectID(),
-			Question_id: newQuestion.Question_id,
-			Content:     newQuestion.Content,
-			Owner:       newQuestion.Owner,
-		}
-
-		if err := c.BindJSON(&newQuestion); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		class1.Question = append(class1.Question, newQuestion)
-
-		update := bson.M{"$set": bson.M{"question": class1.Question}}
-		_, err = classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, update)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, class1)
-	}
-}
-
-func DeleteQuestion() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		questionId := c.Param("questionId")
-
-		objId, err := primitive.ObjectIDFromHex(questionId)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid question ID"})
-			return
-		}
-
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-
-		result, err := classroomCollection.UpdateOne(ctx, bson.M{"question._id": objId}, bson.M{"$pull": bson.M{"question": bson.M{"_id": objId}}})
-
-		defer cancel()
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		if result.ModifiedCount == 0 {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{"message": "Question deleted successfully"})
-	}
-}
-
-func GetQuestionsByClassID() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		classID := c.Param("classId")
-
-		objID, err := primitive.ObjectIDFromHex(classID)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid class ID"})
-			return
-		}
-
-		var class models.AllClass
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		err = classroomCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&class)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, class.Question)
-	}
-}
-
-func GetAllQuestions() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var classrooms []models.AllClass
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		cursor, err := classroomCollection.Find(ctx, bson.M{})
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		if err := cursor.All(ctx, &classrooms); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		var questions []models.Question
-		for _, class := range classrooms {
-			questions = append(questions, class.Question...)
-		}
-
-		c.JSON(http.StatusOK, questions)
-	}
-}
-
-func CreateAnswer() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		var newAnswer models.Answer
-
-		if err := c.BindJSON(&newAnswer); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		newRespon := models.Answer{
-			ID:          primitive.NewObjectID(),
-			Content:     newAnswer.Content,
-			Owner:       newAnswer.Owner,
-			Question_id: newAnswer.Question_id,
-			Answer_id:   newAnswer.Answer_id,
-			Created_at:  time.Now(),
-			Updated_at:  time.Now(),
-		}
-
-		result, err := answerCollection.InsertOne(ctx, newRespon)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, "error")
-			return
-		}
-		fmt.Print(result)
-		c.JSON(http.StatusCreated, "success")
-
-	}
-}
-
-func GetAllAnswer() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-		allans, err := strconv.Atoi(c.Query("allans"))
-		if err != nil || allans < 1 {
-			allans = 10
-		}
-
-		face, err1 := strconv.Atoi(c.Query("face"))
-		if err1 != nil || face < 1 {
-			face = 1
-		}
-
-		startIndex := (face - 1) * allans
-		startIndex, err = strconv.Atoi(c.Query("startIndex"))
-
-		matchStage := bson.D{{"$match", bson.D{{}}}}
-		groupStage := bson.D{{"$group", bson.D{{"_id", bson.D{{"_id", "null"}}}, {"total_count", bson.D{{"$sum", 1}}}, {"data", bson.D{{"$push", "$$ROOT"}}}}}}
-		projectStage := bson.D{
-			{"$project", bson.D{
-				{"_id", 0},
-				{"total_count", 1},
-				{"class_items", bson.D{{"$slice", []interface{}{"$data", startIndex, allans}}}},
-			}}}
-
-		result, err := answerCollection.Aggregate(ctx, mongo.Pipeline{
-			matchStage, groupStage, projectStage})
-		defer cancel()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while listing user items"})
-		}
-		var allanswers []bson.M
-		if err = result.All(ctx, &allanswers); err != nil {
-			log.Fatal(err)
-		}
-		c.JSON(http.StatusOK, allanswers[0])
-	}
-}
-
-func GetAnswerInQuestion() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		answerID := c.Param("answerID")
-
-		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-
-		var answer1 models.Answer
-		AnsId, _ := primitive.ObjectIDFromHex(answerID)
-
-		err := answerCollection.FindOne(ctx, bson.M{"_id": AnsId}).Decode(&answer1)
-		defer cancel()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, answer1)
-		fmt.Println(answer1)
+		c.JSON(http.StatusOK, responses.UpdateResponse{Status: http.StatusOK, Message: "Update Successfully"})
 	}
 }

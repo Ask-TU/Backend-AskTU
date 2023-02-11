@@ -1,10 +1,78 @@
-{
-    "first_name": "YOUR_FIRST_NAME",
-    "last_name": "YOUR_LAST_NAME",
-    "nick_name" : "YOUR NICKNAME",
-    "email":"YOUR EMAIL",
-    "password" :"YOUR PASSWORD",
-    "phone":"YOUR PHONE NUMBER",
-    "student_id":"YOUR STUDENT ID",
-    "user_type":"USER"
-}
+[
+    {
+        "comment": "/auth/signup",
+        "method": "POST",
+        "body" : {
+            "first_name": "YOUR_FIRST_NAME",
+            "last_name": "YOUR_LAST_NAME",
+            "nick_name" : "YOUR NICKNAME",
+            "email":"YOUR EMAIL",
+            "password" :"YOUR PASSWORD",
+            "phone":"YOUR PHONE NUMBER",
+            "student_id":"YOUR STUDENT ID",
+            "user_type":"USER"
+        }
+    },
+    {
+        "comment": "/auth/login",
+        "method": "POST",
+
+        "email":"YOUR EMAIL",
+        "password" :"YOUR PASSWORD"
+    },
+    {
+        "comment":"/api/v1/class",
+        "method": "POST",
+        "body" : {
+            "subject_name": "SF340 SOFTWARE CONFIGURATION MANAGEMENT AND MAINTENANCE",
+            "class_owner": "63e772263aa5ad4db7597b98"
+        }
+    },
+    {
+        "comment":"/api/v1/class/:classId",
+        "method": "DELETE"
+
+    },
+    {
+        "comment":"/api/v1/class",
+        "method": "GET"
+    },
+    {
+        "comment":"/api/v1/class/:classId",
+        "method": "PUT",
+        "body" : {
+            "subject_name": "SF340 SOFTWARE CONFIGURATION MANAGEMENT AND MAINTENANCE",
+            "class_owner": "63e772263aa5ad4db7597b98",
+            "members":["63e772263aa5ad4db7597b98"],
+            "questions":[]
+        }
+
+    },
+    {
+        "comment":"api/v1/class/:classId/question",
+        "method": "POST",
+
+        "content":"ทำไมวิชานี้สั่งงานเยอะจัง จะส่งทันไหม ? ",
+        "owner": "63e772263aa5ad4db7597b98"
+    },
+    {
+        "comment":"api/v1/class/:classId/questions",
+        "method": "GET"
+    },
+    {
+        "comment":"api/v1/question/:questionId",
+        "method":"DELETE"
+    },
+    {
+        "comment":"api/v1/class/question/:questionId/answers",
+        "method":"GET" 
+    },
+    {
+        "comment":"api/v1/class/question/:questionId/answer",
+        "method":"POST",
+        "body" : {
+            "content":     "อาจารย์อยากให้ทำโปรเจกต์เยอะๆ จะได้จบไปเป็น Software Engineer ที่ดีไง",
+            "owner":       "63e6649d37b4ef3821d0ad6a"
+        }
+    }
+]

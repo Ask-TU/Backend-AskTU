@@ -22,36 +22,6 @@ import (
 
 var classroomCollection *mongo.Collection = database.OpenCollection(database.Client, "classrooms")
 
-var class = []models.AllClass{
-	{Main_id: "1",
-		Subject_name: "SF230",
-		Class_owner:  "UserID_1",
-		Question: []models.Question{
-			{Class_id: "1", Content: "What is GoLang", Owner: "UserID_1", Answer: []models.Answer{
-				{Question_id: "1", Content: "Golang is 1", Owner: "UserID_2"},
-				{Question_id: "1", Content: "Golang is 2", Owner: "UserID_3"},
-			}},
-			{Class_id: "1", Content: "What is Java", Owner: "UserID_2", Answer: []models.Answer{
-				{Question_id: "2", Content: "Java is 1", Owner: "UserID_3"},
-				{Question_id: "2", Content: "Java is 2", Owner: "UserID_4"},
-			}},
-		}},
-
-	{Main_id: "2",
-		Subject_name: "SF555",
-		Class_owner:  "UserID_1",
-		Question: []models.Question{
-			{Class_id: "2", Content: "What is HTML", Owner: "UserID_1", Answer: []models.Answer{
-				{Question_id: "3", Content: "HTML is 1", Owner: "UserID_2"},
-				{Question_id: "3", Content: "HTML is 2", Owner: "UserID_3"},
-			}},
-			{Class_id: "2", Content: "What is Lue", Owner: "UserID_2", Answer: []models.Answer{
-				{Question_id: "4", Content: "Lue is 1", Owner: "UserID_3"},
-				{Question_id: "4", Content: "Lue is 2", Owner: "UserID_4"},
-			}},
-		}},
-}
-
 func GetClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		classId := c.Param("classId")
@@ -217,59 +187,126 @@ func UpdateClassromm() gin.HandlerFunc {
 	}
 }
 
-func GetAllQuestion() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var allQuestions []models.Question
-		for _, class := range classes {
-			allQuestions = append(allQuestions, class.Question...)
-		}
-		c.JSON(200, gin.H{"questions": allQuestions})
-	}
-}
-
-func GetQuestionInClass() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		classID := c.Param("id")
-		for _, class := range classes {
-			if class.Main_id == classID {
-				c.JSON(200, gin.H{"questions": class.Question})
-				return
-			}
-		}
-		c.JSON(404, gin.H{"error": fmt.Sprintf("class with ID %s not found", classID)})
-	}
-}
-
-func GetQuestion() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		questionId := c.Param("id")
-		for _, class := range classes {
-			for _, question := range class.Question {
-				if question.Question_id == questionId {
-					c.JSON(200, gin.H{"question": question})
-					return
-				}
-			}
-		}
-		c.JSON(404, gin.H{"error": fmt.Sprintf("question with ID %s not found", questionId)})
-	}
-}
-
 func CreateQuestion() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var question models.Question
-		if err := c.ShouldBindJSON(&question); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
+		classId := c.Param("classId")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		objId, _ := primitive.ObjectIDFromHex(classId)
+
+		var class1 models.AllClass
+
+		err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&class1)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		for i, class := range classes {
-			if class.Main_id == question.Class_id {
-				classes[i].Question = append(classes[i].Question, question)
-				c.JSON(201, gin.H{"question": question})
-				return
-			}
+		var newQuestion models.Question
+
+		newQuestion = models.Question{
+			ID:          primitive.NewObjectID(),
+			Question_id: newQuestion.Question_id,
+			Content:     newQuestion.Content,
+			Owner:       newQuestion.Owner,
 		}
-		c.JSON(201, gin.H{"question": question})
+
+		if err := c.BindJSON(&newQuestion); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		class1.Question = append(class1.Question, newQuestion)
+
+		update := bson.M{"$set": bson.M{"question": class1.Question}}
+		_, err = classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, update)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, class1)
+	}
+}
+
+func DeleteQuestion() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		questionId := c.Param("questionId")
+
+		objId, err := primitive.ObjectIDFromHex(questionId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid question ID"})
+			return
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+
+		result, err := classroomCollection.UpdateOne(ctx, bson.M{"question._id": objId}, bson.M{"$pull": bson.M{"question": bson.M{"_id": objId}}})
+
+		defer cancel()
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if result.ModifiedCount == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Question deleted successfully"})
+	}
+}
+
+func GetQuestionsByClassID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		classID := c.Param("classId")
+
+		objID, err := primitive.ObjectIDFromHex(classID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid class ID"})
+			return
+		}
+
+		var class models.AllClass
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		err = classroomCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&class)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, class.Question)
+	}
+}
+
+func GetAllQuestions() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var classrooms []models.AllClass
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		cursor, err := classroomCollection.Find(ctx, bson.M{})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if err := cursor.All(ctx, &classrooms); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		var questions []models.Question
+		for _, class := range classrooms {
+			questions = append(questions, class.Question...)
+		}
+
+		c.JSON(http.StatusOK, questions)
 	}
 }

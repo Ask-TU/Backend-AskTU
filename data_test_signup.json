@@ -14,6 +14,16 @@
         }
     },
     {
+        "comment": "/auth/user/:userId",
+        "method": "PUT",
+        "body":{
+            "first_name":"YOUR_FIRST_NAME",
+            "last_name" : "YOUR_LAST_NAME", 
+            "nick_name": "YOUR NICKNAME",
+            "classrooms": []
+        }
+    },
+    {
         "comment": "/auth/login",
         "method": "POST",
 

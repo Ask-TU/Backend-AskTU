@@ -1,4 +1,7 @@
 {
     "subject_name": "Your_Classroom",
-    "class_owner": "Your_Name"
+    "class_owner": "Your_Name",
+    "section": "Your_Section"
+    
 }
+

@@ -96,7 +96,7 @@ func SignUp() gin.HandlerFunc {
 		}
 
 		if count > 0 {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "this email or phone number already exists"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "this email or student id or phone number already exists"})
 			return
 		}
 
@@ -110,6 +110,7 @@ func SignUp() gin.HandlerFunc {
 		user.Classrooms = []models.Classroom{}
 
 		resultInsertionNumber, insertErr := userCollection.InsertOne(ctx, user)
+		fmt.Println(resultInsertionNumber)
 		if insertErr != nil {
 			msg := fmt.Sprintf("User item was not created")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})

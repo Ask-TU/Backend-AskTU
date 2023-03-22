@@ -13,10 +13,10 @@ func ClassRoutes(router *gin.Engine) {
 	//routes for version 1 is ready for use
 	v1 := router.Group("api/v1")
 	{
-		v1.GET("/class", controllers.GetAllClassroom())
+		v1.GET("/class", controllers.GetAllClassrooms())
 		v1.POST("/class", controllers.CreateClassroom())
 		v1.GET("/class/:classId", controllers.GetClassroom())
-		v1.PUT("/class/:classId", controllers.UpdateClassromm())
+		v1.PUT("/class/:classId", controllers.UpdateClassroom())
 		v1.DELETE("/class/:classId", controllers.DeleteClassroom())
 
 		//v1.GET("/class/questions", controllers.GetAllQuestions())
@@ -31,21 +31,41 @@ func ClassRoutes(router *gin.Engine) {
 	//routes for version 2 is Development in progress
 	v2 := router.Group("api/v2")
 	{
-		v2.GET("/class", controllers.GetAllClassroom())             //get all class
-		v2.POST("/class", controllers.CreateClassroom())            // create class with body data
-		v2.GET("/class/:classId", controllers.GetClassroom())       //get class by id params
-		v2.PUT("/class/:classId", controllers.UpdateClassromm())    //update class by id params and body data
-		v2.DELETE("/class/:classId", controllers.DeleteClassroom()) // delete class by id params
+		//router.GET("/notifications", controllers.GetAllNotifications)
+		//router.GET("/notifications/:notification_id", controllers.GetNotification)
+		//router.POST("/notifications", controllers.CreateNotification)
+		//router.DELETE("/notifications/:notification_id", controllers.DeleteNotification)
 
-		//v2.GET("/class/questions", controllers.GetAllQuestions())
-		v2.GET("/class/:classId/questions", controllers.GetAllQuestions()) //get all question by class id
-		v2.POST("/class/:classId/question", controllers.CreateQuestion())  //create question by class id and body data
-		v2.DELETE("/question/:questionId", controllers.DeleteQuestion())   // delete question by id params
+		// Question endpoints
+		//router.GET("/questions", controllers.GetAllQuestions)
+		/////router.GET("/questions/:question_id", controllers.GetQuestion)
+		/////router.POST("/questions", controllers.CreateQuestion)
+		/////router.PUT("/questions/:question_id", controllers.UpdateQuestion)
+		///router.DELETE("/questions/:question_id", controllers.DeleteQuestion)
 
-		v2.GET("/class/question/:questionId/answers", controllers.GetAllAnswers()) //get all answers by question id
-		//v2.GET("/answer/:answerID", controllers.GetAnswer())
-		v2.POST("class/question/:questionId/answer", controllers.CreateAnswer()) //create answer by question id and body data
+		// answer endpoints
+		//router.GET("/questions/:question_id/answers", controllers.GetAllanswers)
+		//router.POST("/answers", controllers.Createanswer)
+		//router.PUT("/answers/:answer_id", controllers.Updateanswer)
+		//router.DELETE("/answers/:answer_id", controllers.DeleteComment)
 
+		// Classroom endpoints
+		v2.GET("/classrooms", controllers.GetAllClassrooms())
+		v2.GET("/classrooms/:classroom_id", controllers.GetClassroom())
+		v2.POST("/classrooms", controllers.CreateClassroom())
+		v2.PUT("/classrooms/:classroom_id", controllers.UpdateClassroom())
+		v2.DELETE("/classrooms/:classroom_id", controllers.DeleteClassroom())
+		//
+		// Classroom Members endpoints
+		//router.GET("/classrooms/:classroom_id/members", controllers.GetClassroomMembers)
+		v2.POST("/classrooms/:classroom_id/members", controllers.AddClassroomMember())
+		//v2.DELETE("/classrooms/:classroom_id/members/:member_id", controllers.RemoveClassroomMember())
+
+		// Search endpoints
+		//router.GET("/questions/search", controllers.SearchQuestions)
+		////router.GET("/comments/search", controllers.SearchComments)
+		////router.GET("/classrooms/search", controllers.SearchClassrooms)
+		//router.GET("/search", controllers.GlobalSearch)
 	}
 
 }

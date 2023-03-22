@@ -98,7 +98,7 @@ func GetClassroom() gin.HandlerFunc {
 		fmt.Println(oldClass)
 	}
 }
-func GetAllClassroom() gin.HandlerFunc {
+func GetAllClassrooms() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		// recordPerPage := 10
@@ -162,7 +162,7 @@ func DeleteClassroom() gin.HandlerFunc {
 	}
 }
 
-func UpdateClassromm() gin.HandlerFunc {
+func UpdateClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		classId := c.Param("classId")
@@ -202,61 +202,8 @@ func UpdateClassromm() gin.HandlerFunc {
 	}
 }
 
-// Add class id to user profile  when user create class and add user id to class member
-func CreateFirstClassroom() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		var class models.Classrooms
-
-		if err := c.BindJSON(&class); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		validationErr := validate.Struct(&class)
-		if validationErr != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
-			return
-		}
-
-		count, err := classroomCollection.CountDocuments(ctx, bson.M{"subject_name": class.Subject_name})
-		if err != nil {
-			log.Panic(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the Class room"})
-			return
-		}
-
-		if count > 0 {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "The Class has already exists"})
-			return
-		}
-
-		newClass := models.Classrooms{
-			ID:           primitive.NewObjectID(),
-			Class_id:     helpers.GenerateID(),
-			Subject_name: class.Subject_name,
-			Class_owner:  class.Class_owner,
-			Created_at:   time.Now(),
-			Updated_at:   time.Now(),
-			Questions:    class.Questions,
-			Members:      class.Members,
-		}
-
-		result, err := classroomCollection.InsertOne(ctx, newClass)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, "error")
-			return
-		}
-		fmt.Print(result)
-		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": newClass}})
-
-	}
-}
-
 // Add class id to user profile and add user id to class profile
-func JoinClassromm() gin.HandlerFunc {
+func AddClassroomMember() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		classId := c.Param("classId")

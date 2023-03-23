@@ -80,13 +80,13 @@ func CreateClassroom() gin.HandlerFunc {
 
 func GetClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		classId := c.Param("classId")
+		classroom_id := c.Param("classroom_id")
 
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 
 		var oldClass models.Classrooms
-		objId, _ := primitive.ObjectIDFromHex(classId)
-
+		objId, _ := primitive.ObjectIDFromHex(classroom_id)
+		fmt.Print(objId)
 		err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
 		defer cancel()
 		if err != nil {
@@ -141,10 +141,10 @@ func GetAllClassrooms() gin.HandlerFunc {
 func DeleteClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		classId := c.Param("classId")
+		classroom_id := c.Param("classroom_id")
 		defer cancel()
 
-		objId, _ := primitive.ObjectIDFromHex(classId)
+		objId, _ := primitive.ObjectIDFromHex(classroom_id)
 
 		result, err := classroomCollection.DeleteOne(ctx, bson.M{"_id": objId})
 
@@ -165,11 +165,11 @@ func DeleteClassroom() gin.HandlerFunc {
 func UpdateClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		classId := c.Param("classId")
+		classroom_id := c.Param("classroom_id")
 		var oldClass models.Classrooms
 		defer cancel()
 
-		objId, _ := primitive.ObjectIDFromHex(classId)
+		objId, _ := primitive.ObjectIDFromHex(classroom_id)
 
 		if err := c.BindJSON(&oldClass); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error1": err.Error()})
@@ -202,43 +202,192 @@ func UpdateClassroom() gin.HandlerFunc {
 	}
 }
 
-// Add class id to user profile and add user id to class profile
-func AddClassroomMember() gin.HandlerFunc {
+func JoinClasrooms() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		//1
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		classId := c.Param("classId")
-		var oldClass models.Classrooms
 		defer cancel()
 
-		objId, _ := primitive.ObjectIDFromHex(classId)
+		classroom_id := c.Param("classroom_id")
+		member_id := c.Param("member_id")
 
-		if err := c.BindJSON(&oldClass); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error1": err.Error()})
-			return
-		}
-
-		validationErr := validate.Struct(&oldClass)
-		if validationErr != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error2": validationErr.Error()})
-			return
-		}
-
-		update := bson.M{"class_id": oldClass.Class_id, "subject_name": oldClass.Subject_name, "class_owner": oldClass.Class_owner, "members": oldClass.Members, "questions": oldClass.Questions}
-		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+		objId, err := primitive.ObjectIDFromHex(classroom_id)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, "error3")
+			c.JSON(http.StatusBadRequest, responses.Response{Status: http.StatusBadRequest, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
 			return
 		}
-		var updatedClass models.Classrooms
-		if result.MatchedCount == 1 {
-			err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&updatedClass)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, "cannot update")
-				return
-			}
+		//2
+		var oldClass models.Classrooms
+		err = classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
-		c.JSON(http.StatusOK, responses.UpdateResponse{Status: http.StatusOK, Message: "Update Successfully"})
+		newMember := []string{member_id}
+		mergeMember := append(oldClass.Members, newMember...)
+		update := bson.M{
+			"subject_name": oldClass.Subject_name,
+			"class_owner":  oldClass.Class_owner,
+			"created_at":   oldClass.Created_at,
+			"updated_at":   time.Now(),
+			"questions":    oldClass.Questions,
+			"members":      mergeMember,
+		}
+
+		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, responses.Response{Status: http.StatusInternalServerError, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
+			return
+		} else {
+			fmt.Println(result)
+		}
+		//3
+		objUserId, err := primitive.ObjectIDFromHex(member_id)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, responses.Response{Status: http.StatusBadRequest, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
+			return
+		}
+
+		var oldUser models.User
+		err = Usercollection.FindOne(ctx, bson.M{"_id": objUserId}).Decode(&oldUser)
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		newUserInfomation := []string{classroom_id}
+		mergeUserInfomation := append(oldUser.Classrooms, newUserInfomation...)
+		updateInformation := bson.M{
+			"first_name": oldUser.First_name,
+			"last_name":  oldUser.Last_name,
+			"nick_name":  oldUser.Nick_name,
+			"email":      oldUser.Email,
+			"phone":      oldUser.Phone,
+			"password":   oldUser.Password,
+			"created_at": oldUser.Created_at,
+			"updated_at": time.Now(),
+			"user_id":    oldUser.User_id,
+			"student_id": oldUser.Student_id,
+			"classrooms": mergeUserInfomation,
+		}
+
+		result, err = Usercollection.UpdateOne(ctx, bson.M{"_id": objUserId}, bson.M{"$set": updateInformation})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, responses.Response{Status: http.StatusInternalServerError, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
+			return
+		} else {
+			fmt.Println(result)
+		}
+
+		c.JSON(http.StatusOK, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": "Join Classrooms Successfully"}})
+	}
+}
+
+func RemoveClassroomMember() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		//1
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		classroom_id := c.Param("classroom_id")
+		member_id := c.Param("member_id")
+
+		objId, err := primitive.ObjectIDFromHex(classroom_id)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, responses.Response{Status: http.StatusBadRequest, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
+			return
+		}
+		//2 classrooms
+		var oldClass models.Classrooms
+		err = classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		valueToRemove := member_id
+		found := false
+		index := -1
+		for i, v := range oldClass.Members {
+			if v == valueToRemove {
+				found = true
+				index = i
+				break
+			}
+		}
+		if found {
+			oldClass.Members = append(oldClass.Members[:index], oldClass.Members[index+1:]...)
+		}
+		update := bson.M{
+			"subject_name": oldClass.Subject_name,
+			"class_owner":  oldClass.Class_owner,
+			"created_at":   oldClass.Created_at,
+			"updated_at":   time.Now(),
+			"questions":    oldClass.Questions,
+			"members":      oldClass.Members,
+		}
+
+		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, responses.Response{Status: http.StatusInternalServerError, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
+			return
+		} else {
+			fmt.Println(result)
+		}
+		//3
+		objUserId, err := primitive.ObjectIDFromHex(member_id)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, responses.Response{Status: http.StatusBadRequest, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
+			return
+		}
+
+		var oldUser models.User
+		err = Usercollection.FindOne(ctx, bson.M{"_id": objUserId}).Decode(&oldUser)
+		defer cancel()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		valueToRemove = classroom_id
+		found = false
+		index = -1
+		for i, v := range oldUser.Classrooms {
+			if v == valueToRemove {
+				found = true
+				index = i
+				break
+			}
+		}
+		if found {
+			oldUser.Classrooms = append(oldUser.Classrooms[:index], oldUser.Classrooms[index+1:]...)
+		}
+		updateInformation := bson.M{
+			"first_name": oldUser.First_name,
+			"last_name":  oldUser.Last_name,
+			"nick_name":  oldUser.Nick_name,
+			"email":      oldUser.Email,
+			"phone":      oldUser.Phone,
+			"password":   oldUser.Password,
+			"created_at": oldUser.Created_at,
+			"updated_at": time.Now(),
+			"user_id":    oldUser.User_id,
+			"student_id": oldUser.Student_id,
+			"classrooms": oldUser.Classrooms,
+		}
+
+		result, err = Usercollection.UpdateOne(ctx, bson.M{"_id": objUserId}, bson.M{"$set": updateInformation})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, responses.Response{Status: http.StatusInternalServerError, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
+			return
+		} else {
+			fmt.Println(result)
+		}
+
+		c.JSON(http.StatusOK, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": "Delete Member from Classrooms Successfully"}})
 	}
 }

@@ -6,11 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Classroom struct {
-	ID        primitive.ObjectID `bson:"_id"`
-	ClassRoom string             `json:"classroom"`
-}
-
 type User struct {
 	ID            primitive.ObjectID `bson:"_id"`
 	First_name    *string            `json:"first_name" validate:"required,min=2,max=100"`
@@ -26,5 +21,5 @@ type User struct {
 	Updated_at    time.Time          `json:"updated_at"`
 	User_id       string             `json:"user_id"`
 	Student_id    string             `json:"student_id"`
-	Classrooms    []Classroom        `json:"classrooms"`
+	Classrooms    []string           `json:"classrooms"`
 }

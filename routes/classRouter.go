@@ -58,14 +58,15 @@ func ClassRoutes(router *gin.Engine) {
 		//
 		// Classroom Members endpoints
 		//router.GET("/classrooms/:classroom_id/members", controllers.GetClassroomMembers)
-		v2.POST("/classrooms/:classroom_id/members", controllers.AddClassroomMember())
-		//v2.DELETE("/classrooms/:classroom_id/members/:member_id", controllers.RemoveClassroomMember())
+		v2.POST("/classrooms/join/:classroom_id/:member_id", controllers.JoinClasrooms())
+		v2.DELETE("/classrooms/delete/:classroom_id/:member_id", controllers.RemoveClassroomMember())
 
 		// Search endpoints
 		//router.GET("/questions/search", controllers.SearchQuestions)
 		////router.GET("/comments/search", controllers.SearchComments)
 		////router.GET("/classrooms/search", controllers.SearchClassrooms)
 		//router.GET("/search", controllers.GlobalSearch)
+
 	}
 
 }

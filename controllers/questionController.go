@@ -26,7 +26,7 @@ func CreateQuestion() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		classId := c.Param("classId")
+		classroom_id := c.Param("classroom_id")
 		defer cancel()
 
 		var question models.Question
@@ -45,7 +45,7 @@ func CreateQuestion() gin.HandlerFunc {
 		newClass := models.Question{
 			ID:         primitive.NewObjectID(),
 			Content:    question.Content,
-			Owner:      classId,
+			Owner:      classroom_id,
 			Created_at: time.Now(),
 			Updated_at: time.Now(),
 			Answer:     question.Answer,
@@ -64,12 +64,12 @@ func CreateQuestion() gin.HandlerFunc {
 
 func GetAllQuestions() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		classId := c.Param("classId")
-		fmt.Println(classId)
+		classroom_id := c.Param("classroom_id")
+		fmt.Println(classroom_id)
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		questions, err := findQuestionsByClassId(ctx, classId)
+		questions, err := findQuestionsByclassroom_id(ctx, classroom_id)
 		if err != nil {
 			c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Fail to Find Data", Result: map[string]interface{}{"data": err.Error()}})
 			return
@@ -79,10 +79,10 @@ func GetAllQuestions() gin.HandlerFunc {
 	}
 }
 
-func findQuestionsByClassId(ctx context.Context, classId string) ([]interface{}, error) {
+func findQuestionsByclassroom_id(ctx context.Context, classroom_id string) ([]interface{}, error) {
 	var questions []interface{}
 
-	results, err := questionCollection.Find(ctx, bson.M{"owner": classId})
+	results, err := questionCollection.Find(ctx, bson.M{"owner": classroom_id})
 	if err != nil {
 		return nil, err
 	}

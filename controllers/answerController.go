@@ -25,7 +25,7 @@ var answerCollection *mongo.Collection = database.OpenCollection(database.Client
 func CreateAnswer() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		qestionId := c.Param("questionId")
+		qestionId := c.Param("question_id")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()

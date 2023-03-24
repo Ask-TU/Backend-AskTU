@@ -27,10 +27,11 @@ func CreateQuestion() gin.HandlerFunc {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		classroom_id := c.Param("classroom_id")
-		defer cancel()
 
+		var oldClass models.Classrooms
 		var question models.Question
 
+		defer cancel()
 		if err := c.BindJSON(&question); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -42,22 +43,24 @@ func CreateQuestion() gin.HandlerFunc {
 			return
 		}
 
-		newClass := models.Question{
+		newQuestion := models.Question{
 			ID:         primitive.NewObjectID(),
 			Content:    question.Content,
 			Owner:      classroom_id,
+			Class_id:   classroom_id,
 			Created_at: time.Now(),
 			Updated_at: time.Now(),
 			Answer:     question.Answer,
 		}
 
-		result, err := questionCollection.InsertOne(ctx, newClass)
+		result, err := questionCollection.InsertOne(ctx, newQuestion)
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, "error")
 			return
 		}
 		fmt.Print(result)
-		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": newClass}})
+		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": newQuestion}})
 
 	}
 }
@@ -74,8 +77,8 @@ func GetAllQuestions() gin.HandlerFunc {
 			c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Fail to Find Data", Result: map[string]interface{}{"data": err.Error()}})
 			return
 		}
-		fmt.Println(questions)
-		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": questions}})
+		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": questions, "count": len(questions)}})
+
 	}
 }
 
@@ -99,10 +102,52 @@ func findQuestionsByclassroom_id(ctx context.Context, classroom_id string) ([]in
 
 	return questions, nil
 }
+
+func GetQuestionById() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		classroom_id := c.Param("question_id")
+		fmt.Println(classroom_id)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		questions, err := findQuestionsByclassroom_id(ctx, classroom_id)
+		if err != nil {
+			c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Fail to Find Data", Result: map[string]interface{}{"data": err.Error()}})
+			return
+		}
+		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": questions, "count": len(questions)}})
+
+	}
+}
+
 func DeleteQuestion() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		questionId := c.Param("questionId")
+		defer cancel()
+
+		objId, _ := primitive.ObjectIDFromHex(questionId)
+
+		result, err := questionCollection.DeleteOne(ctx, bson.M{"_id": objId})
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, "error")
+			return
+		}
+
+		if result.DeletedCount < 1 {
+			c.JSON(http.StatusNotFound, err.Error())
+			return
+		}
+
+		c.JSON(http.StatusOK, responses.DeleteResponse{Status: http.StatusOK, Message: "Deleted Successfully"})
+	}
+}
+
+func UpdateQuestion() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		questionId := c.Param("question_id")
 		defer cancel()
 
 		objId, _ := primitive.ObjectIDFromHex(questionId)

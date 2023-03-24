@@ -37,10 +37,10 @@ func ClassRoutes(router *gin.Engine) {
 		//router.DELETE("/notifications/:notification_id", controllers.DeleteNotification)
 
 		// Question endpoints
-		//router.GET("/questions", controllers.GetAllQuestions)
-		/////router.GET("/questions/:question_id", controllers.GetQuestion)
-		/////router.POST("/questions", controllers.CreateQuestion)
-		/////router.PUT("/questions/:question_id", controllers.UpdateQuestion)
+		v2.GET("/classrooms/:classroom_id/questions", controllers.GetAllQuestions())
+		//v2.GET("/classrooms/:classroom_id/questions/:question_id", controllers.GetQuestionById())
+		v2.POST("/classrooms/:classroom_id/questions", controllers.CreateQuestion())
+		v2.PUT("/classrooms/:classroom_id/questions/:question_id", controllers.UpdateQuestion())
 		///router.DELETE("/questions/:question_id", controllers.DeleteQuestion)
 
 		// answer endpoints

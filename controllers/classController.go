@@ -182,7 +182,13 @@ func UpdateClassroom() gin.HandlerFunc {
 			return
 		}
 
-		update := bson.M{"class_id": oldClass.Class_id, "subject_name": oldClass.Subject_name, "class_owner": oldClass.Class_owner, "members": oldClass.Members, "questions": oldClass.Questions}
+		update := bson.M{
+			"class_id":     oldClass.Class_id,
+			"subject_name": oldClass.Subject_name,
+			"class_owner":  oldClass.Class_owner,
+			"members":      oldClass.Members,
+			"questions":    oldClass.Questions,
+		}
 		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
 
 		if err != nil {
@@ -190,6 +196,7 @@ func UpdateClassroom() gin.HandlerFunc {
 			return
 		}
 		var updatedClass models.Classrooms
+		
 		if result.MatchedCount == 1 {
 			err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&updatedClass)
 			if err != nil {
@@ -323,6 +330,7 @@ func RemoveClassroomMember() gin.HandlerFunc {
 		if found {
 			oldClass.Members = append(oldClass.Members[:index], oldClass.Members[index+1:]...)
 		}
+
 		update := bson.M{
 			"subject_name": oldClass.Subject_name,
 			"class_owner":  oldClass.Class_owner,

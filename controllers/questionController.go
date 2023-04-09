@@ -28,7 +28,7 @@ func CreateQuestion() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		classroom_id := c.Param("classroom_id")
 
-		var oldClass models.Classrooms
+		//var oldClass models.Classrooms
 		var question models.Question
 
 		defer cancel()
@@ -62,6 +62,7 @@ func CreateQuestion() gin.HandlerFunc {
 		fmt.Print(result)
 		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": newQuestion}})
 
+		
 	}
 }
 

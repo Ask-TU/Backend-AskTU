@@ -23,8 +23,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var classroomCollection *mongo.Collection = database.OpenCollection(database.Client, "classrooms")
-
+var ClassroomCollection *mongo.Collection = database.OpenCollection(database.Client, "classrooms")
 // Add class id to user profile  when user create class and add user id to class member
 func CreateClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -44,7 +43,7 @@ func CreateClassroom() gin.HandlerFunc {
 			return
 		}
 
-		count, err := classroomCollection.CountDocuments(ctx, bson.M{"subject_name": class.Subject_name})
+		count, err := ClassroomCollection.CountDocuments(ctx, bson.M{"subject_name": class.Subject_name})
 		if err != nil {
 			log.Panic(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error occured while checking for the Class room"})
@@ -67,7 +66,7 @@ func CreateClassroom() gin.HandlerFunc {
 			Members:      class.Members,
 		}
 
-		result, err := classroomCollection.InsertOne(ctx, newClass)
+		result, err := ClassroomCollection.InsertOne(ctx, newClass)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, "error")
 			return
@@ -87,7 +86,7 @@ func GetClassroom() gin.HandlerFunc {
 		var oldClass models.Classrooms
 		objId, _ := primitive.ObjectIDFromHex(classroom_id)
 		fmt.Print(objId)
-		err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
+		err := ClassroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
 		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -98,6 +97,7 @@ func GetClassroom() gin.HandlerFunc {
 		fmt.Println(oldClass)
 	}
 }
+
 func GetAllClassrooms() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
@@ -124,7 +124,7 @@ func GetAllClassrooms() gin.HandlerFunc {
 				{"class_items", bson.D{{"$slice", []interface{}{"$data", startIndex, recordPerPage}}}},
 			}}}
 
-		result, err := classroomCollection.Aggregate(ctx, mongo.Pipeline{
+		result, err := ClassroomCollection.Aggregate(ctx, mongo.Pipeline{
 			matchStage, groupStage, projectStage})
 		defer cancel()
 		if err != nil {
@@ -138,6 +138,7 @@ func GetAllClassrooms() gin.HandlerFunc {
 
 	}
 }
+
 func DeleteClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -146,7 +147,7 @@ func DeleteClassroom() gin.HandlerFunc {
 
 		objId, _ := primitive.ObjectIDFromHex(classroom_id)
 
-		result, err := classroomCollection.DeleteOne(ctx, bson.M{"_id": objId})
+		result, err := ClassroomCollection.DeleteOne(ctx, bson.M{"_id": objId})
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, "error")
@@ -189,16 +190,16 @@ func UpdateClassroom() gin.HandlerFunc {
 			"members":      oldClass.Members,
 			"questions":    oldClass.Questions,
 		}
-		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+		result, err := ClassroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, "error3")
 			return
 		}
 		var updatedClass models.Classrooms
-		
+
 		if result.MatchedCount == 1 {
-			err := classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&updatedClass)
+			err := ClassroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&updatedClass)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, "cannot update")
 				return
@@ -226,7 +227,7 @@ func JoinClasrooms() gin.HandlerFunc {
 		}
 		//2
 		var oldClass models.Classrooms
-		err = classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
+		err = ClassroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
 		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -244,7 +245,7 @@ func JoinClasrooms() gin.HandlerFunc {
 			"members":      mergeMember,
 		}
 
-		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+		result, err := ClassroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, responses.Response{Status: http.StatusInternalServerError, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
 			return
@@ -311,7 +312,7 @@ func RemoveClassroomMember() gin.HandlerFunc {
 		}
 		//2 classrooms
 		var oldClass models.Classrooms
-		err = classroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
+		err = ClassroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
 		defer cancel()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -340,7 +341,7 @@ func RemoveClassroomMember() gin.HandlerFunc {
 			"members":      oldClass.Members,
 		}
 
-		result, err := classroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+		result, err := ClassroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, responses.Response{Status: http.StatusInternalServerError, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
 			return
@@ -399,3 +400,4 @@ func RemoveClassroomMember() gin.HandlerFunc {
 		c.JSON(http.StatusOK, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": "Delete Member from Classrooms Successfully"}})
 	}
 }
+

@@ -27,6 +27,7 @@ func CreateQuestion() gin.HandlerFunc {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		classroom_id := c.Param("classroom_id")
+		objId, err := primitive.ObjectIDFromHex(classroom_id)
 
 		//var oldClass models.Classrooms
 		var question models.Question
@@ -52,7 +53,7 @@ func CreateQuestion() gin.HandlerFunc {
 			Updated_at: time.Now(),
 			Answer:     question.Answer,
 		}
-
+		
 		result, err := questionCollection.InsertOne(ctx, newQuestion)
 
 		if err != nil {
@@ -60,9 +61,34 @@ func CreateQuestion() gin.HandlerFunc {
 			return
 		}
 		fmt.Print(result)
+
+
+		var oldClass models.Classrooms
+		err = ClassroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
+		
+		classroomQuestion := []string{ newQuestion.ID.Hex() }
+
+		update := bson.M{
+			"subject_name": oldClass.Subject_name,
+			"class_owner":  oldClass.Class_owner,
+			"created_at":   oldClass.Created_at,
+			"updated_at":   time.Now(),
+			"questions":    classroomQuestion,
+			"members":      oldClass.Members,
+		}
+
+		classroom_result, err := ClassroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+		
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, responses.Response{Status: http.StatusInternalServerError, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
+			return
+		} else {
+			fmt.Println(classroom_result)
+		}
+
 		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": newQuestion}})
 
-		
+
 	}
 }
 

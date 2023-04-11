@@ -25,8 +25,10 @@ var answerCollection *mongo.Collection = database.OpenCollection(database.Client
 func CreateAnswer() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		qestionId := c.Param("question_id")
+		questionId := c.Param("question_id")
 
+		objId, err := primitive.ObjectIDFromHex(questionId)
+		
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		var answer models.Answer
@@ -40,7 +42,7 @@ func CreateAnswer() gin.HandlerFunc {
 			ID:          primitive.NewObjectID(),
 			Content:     answer.Content,
 			Owner:       answer.Owner,
-			Question_id: qestionId,
+			Question_id: questionId,
 			Created_at:  time.Now(),
 			Updated_at:  time.Now(),
 		}
@@ -51,6 +53,50 @@ func CreateAnswer() gin.HandlerFunc {
 			return
 		}
 		fmt.Print(result)
+
+		var oldQuestion models.Question
+
+		err = QeustionCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldQuestion)
+		
+		Answers := append(oldQuestion.Answer, newAnswer.ID.Hex())
+
+		update := bson.M{
+			"content":    oldQuestion.Content,
+			"owner":      oldQuestion.Class_id,
+			"class_id":    oldQuestion.Class_id,
+			"created_at":  oldQuestion.Created_at,
+			"updated_at": time.Now(),
+			"answer":     Answers,
+		}
+
+		question_result, err := QeustionCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+		
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, responses.Response{Status: http.StatusInternalServerError, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
+			return
+		} else {
+			fmt.Println(question_result)
+		}
+
+		newNotifiactionForOwner := models.Notification{
+			ID:           primitive.NewObjectID(),
+			Content:	  "You are have created new answers",
+			Owner:		answer.Owner,
+			Class_id:   oldQuestion.Class_id,     
+			Created_at:   time.Now(),
+		}
+
+		newNotifiactionForAnswers := models.Notification{
+			ID:           primitive.NewObjectID(),
+			Content:	  "You are have a new answers",
+			Owner:		oldQuestion.Owner,
+			Class_id:   oldQuestion.Class_id,     
+			Created_at:   time.Now(),
+		}
+		result_notificationOn, err := NotificationCollection.InsertOne(ctx, newNotifiactionForOwner)
+		result_notificationAn, err := NotificationCollection.InsertOne(ctx, newNotifiactionForAnswers)
+		
+		fmt.Println(result_notificationOn, result_notificationAn)
 
 		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": newAnswer}})
 

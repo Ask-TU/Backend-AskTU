@@ -21,5 +21,6 @@ type User struct {
 	Updated_at    time.Time          `json:"updated_at"`
 	User_id       string             `json:"user_id"`
 	Student_id    string             `json:"student_id"`
+	Notification_id string            `json:"notification_id"`
 	Classrooms    []string           `json:"classrooms"`
 }

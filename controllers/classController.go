@@ -24,6 +24,8 @@ import (
 )
 
 var ClassroomCollection *mongo.Collection = database.OpenCollection(database.Client, "classrooms")
+var NotificationCollection *mongo.Collection = database.OpenCollection(database.Client, "notifications")
+
 // Add class id to user profile  when user create class and add user id to class member
 func CreateClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -64,14 +66,29 @@ func CreateClassroom() gin.HandlerFunc {
 			Updated_at:   time.Now(),
 			Questions:    class.Questions,
 			Members:      class.Members,
+			Section: 	class.Section,
+		}
+		result, err := ClassroomCollection.InsertOne(ctx, newClass)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, "error")
+					return
+		}
+		
+		newNotifiaction := models.Notification{
+			ID:           primitive.NewObjectID(),
+			Content:	  "You have created a new class",
+			Owner:		newClass.Class_owner,
+			Class_id:   newClass.Class_id,     
+			Created_at:   time.Now(),
 		}
 
-		result, err := ClassroomCollection.InsertOne(ctx, newClass)
+		result_notification, err := NotificationCollection.InsertOne(ctx, newNotifiaction)
+		
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, "error")
 			return
 		}
-		fmt.Print(result)
+		fmt.Print(result, result_notification)
 		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": newClass}})
 
 	}
@@ -167,6 +184,7 @@ func UpdateClassroom() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		classroom_id := c.Param("classroom_id")
+
 		var oldClass models.Classrooms
 		defer cancel()
 
@@ -187,8 +205,10 @@ func UpdateClassroom() gin.HandlerFunc {
 			"class_id":     oldClass.Class_id,
 			"subject_name": oldClass.Subject_name,
 			"class_owner":  oldClass.Class_owner,
+			"section":      oldClass.Section,
 			"members":      oldClass.Members,
 			"questions":    oldClass.Questions,
+			
 		}
 		result, err := ClassroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
 

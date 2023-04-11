@@ -40,12 +40,12 @@ func ClassRoutes(router *gin.Engine) {
 		v2.GET("/classrooms/:classroom_id/questions", controllers.GetAllQuestions())
 		//v2.GET("/classrooms/:classroom_id/questions/:question_id", controllers.GetQuestionById())
 		v2.POST("/classrooms/:classroom_id/questions", controllers.CreateQuestion())
-		v2.PUT("/classrooms/:classroom_id/questions/:question_id", controllers.UpdateQuestion())
+		//v2.PUT("/classrooms/:classroom_id/questions/:question_id", controllers.UpdateQuestion())
 		///router.DELETE("/questions/:question_id", controllers.DeleteQuestion)
 
 		// answer endpoints
 		//router.GET("/questions/:question_id/answers", controllers.GetAllanswers)
-		//router.POST("/answers", controllers.Createanswer)
+		v2.POST("/classrooms/questions/:question_id/answers", controllers.CreateAnswer())
 		//router.PUT("/answers/:answer_id", controllers.Updateanswer)
 		//router.DELETE("/answers/:answer_id", controllers.DeleteComment)
 

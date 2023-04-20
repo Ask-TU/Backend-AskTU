@@ -68,6 +68,7 @@ func CreateClassroom() gin.HandlerFunc {
 			Members:      class.Members,
 			Section: 	class.Section,
 		}
+		
 		result, err := ClassroomCollection.InsertOne(ctx, newClass)
 				if err != nil {
 					c.JSON(http.StatusInternalServerError, "error")

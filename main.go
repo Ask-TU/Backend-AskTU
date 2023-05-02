@@ -18,9 +18,11 @@ func main() {
 	router := gin.Default()
 
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"}
+
+	config.AllowOrigins = []string{"*","http://localhost:3000"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
-	config.AllowHeaders = []string{"Origin", "Content-Type"}
+	config.AllowHeaders = []string{"Origin", "Content-Type" , "token"}
+
 	router.Use(cors.New(config))
 
 	router.Use(cors.Default())

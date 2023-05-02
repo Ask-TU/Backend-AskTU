@@ -111,6 +111,7 @@ func GetAllQuestions() gin.HandlerFunc {
 		defer cancel()
 
 		questions, err := findQuestionsByclassroom_id(ctx, classroom_id)
+		
 		if err != nil {
 			c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Fail to Find Data", Result: map[string]interface{}{"data": err.Error()}})
 			return
@@ -122,8 +123,8 @@ func GetAllQuestions() gin.HandlerFunc {
 
 func findQuestionsByclassroom_id(ctx context.Context, classroom_id string) ([]interface{}, error) {
 	var questions []interface{}
-
-	results, err := QeustionCollection.Find(ctx, bson.M{"owner": classroom_id})
+	
+	results, err := QeustionCollection.Find(ctx, bson.M{"class_id": classroom_id})
 	if err != nil {
 		return nil, err
 	}

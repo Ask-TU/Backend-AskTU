@@ -12,6 +12,7 @@ type Classrooms struct {
 	Class_owner  string             `json:"class_owner"`
 	Tag 		 string             `json:"tag"`
 	Section      string             `json:"section"`
+	Description string             `json:"description"`
 	Class_id     string             `json:"class_id"`
 	Created_at   time.Time          `json:"created_at"`
 	Updated_at   time.Time          `json:"updated_at"`

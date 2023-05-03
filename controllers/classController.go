@@ -64,6 +64,7 @@ func CreateClassroom() gin.HandlerFunc {
 			Subject_name: class.Subject_name,
 			Class_owner:  class.Class_owner,
 			Tag: 		class.Tag,
+			Description: class.Description,
 			Created_at:   time.Now(),
 			Updated_at:   time.Now(),
 			Questions:    class.Questions,
@@ -446,7 +447,7 @@ return func(c *gin.Context)  {
 		fmt.Println(class.Subject_name)
 		err := ClassroomCollection.FindOne(ctx, bson.M{"subject_name": class.Subject_name}).Decode(&class)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, "not founc")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 

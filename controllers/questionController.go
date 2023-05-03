@@ -44,11 +44,17 @@ func CreateQuestion() gin.HandlerFunc {
 			return
 		}
 
+
+		var oldClass models.Classrooms
+
+		err = ClassroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
+		
 		newQuestion := models.Question{
 			ID:         primitive.NewObjectID(),
 			Content:    question.Content,
 			Owner:      question.Owner,
 			Owner_name: question.Owner_name,
+			Tag: 		oldClass.Tag,
 			Class_id:   classroom_id,
 			Created_at: time.Now(),
 			Updated_at: time.Now(),
@@ -63,10 +69,6 @@ func CreateQuestion() gin.HandlerFunc {
 		}
 		fmt.Print(result)
 
-
-		var oldClass models.Classrooms
-		err = ClassroomCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&oldClass)
-		
 		classroomQuestion := append(oldClass.Questions, newQuestion.ID.Hex())
 
 		update := bson.M{
@@ -79,6 +81,7 @@ func CreateQuestion() gin.HandlerFunc {
 		}
 
 		classroom_result, err := ClassroomCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+		
 		
 		newNotifiaction := models.Notification{
 			ID:           primitive.NewObjectID(),

@@ -32,6 +32,7 @@ func CreateClassroom() gin.HandlerFunc {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
+
 		var class models.Classrooms
 
 		if err := c.BindJSON(&class); err != nil {
@@ -420,6 +421,37 @@ func RemoveClassroomMember() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": "Delete Member from Classrooms Successfully"}})
+	}
+}
+
+func GlobalSearch() gin.HandlerFunc {
+return func(c *gin.Context)  {
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		
+		var class models.Classrooms
+
+		if err := c.BindJSON(&class); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		validationErr := validate.Struct(&class)
+		if validationErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
+			return
+		}
+
+		fmt.Println(class.Subject_name)
+		err := ClassroomCollection.FindOne(ctx, bson.M{"subject_name": class.Subject_name}).Decode(&class)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, "not founc")
+			return
+		}
+
+		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": class}})
+
 	}
 }
 

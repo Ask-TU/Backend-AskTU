@@ -159,6 +159,34 @@ func GetQuestionById() gin.HandlerFunc {
 	}
 }
 
+func GetQuestionByuserId() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		questionId := c.Param("question_id")
+		fmt.Println(questionId)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		var questions []interface{}
+	
+		results, err := QeustionCollection.Find(ctx, bson.M{"owner": questionId})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, "error")
+		}
+		defer results.Close(ctx)
+
+		for results.Next(ctx) {
+			var singleQuestion models.Question
+			if err = results.Decode(&singleQuestion); err != nil {
+				c.JSON(http.StatusInternalServerError, "error")
+			}
+			log.Println(singleQuestion)
+			questions = append(questions, singleQuestion)
+		}
+		c.JSON(http.StatusCreated, responses.Response{Status: http.StatusOK, Message: "Successfully", Result: map[string]interface{}{"data": questions}})
+
+	}
+}
+
 func DeleteQuestion() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

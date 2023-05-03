@@ -39,6 +39,7 @@ func ClassRoutes(router *gin.Engine) {
 		// Question endpoints
 		v2.GET("/classrooms/:classroom_id/questions", controllers.GetAllQuestions())
 		//v2.GET("/classrooms/:classroom_id/questions/:question_id", controllers.GetQuestionById())
+		v2.GET("/classrooms/questions/:question_id", controllers.GetQuestionByuserId())
 		v2.POST("/classrooms/:classroom_id/questions", controllers.CreateQuestion())
 		//v2.PUT("/classrooms/:classroom_id/questions/:question_id", controllers.UpdateQuestion())
 		///router.DELETE("/questions/:question_id", controllers.DeleteQuestion)
@@ -46,6 +47,7 @@ func ClassRoutes(router *gin.Engine) {
 		// answer endpoints
 		//router.GET("/questions/:question_id/answers", controllers.GetAllanswers)
 		v2.GET("/classrooms/questions/:question_id/answers", controllers.GetAllAnswers())
+		
 		v2.POST("/classrooms/questions/:question_id/answers", controllers.CreateAnswer())
 		//router.PUT("/answers/:answer_id", controllers.Updateanswer)
 		//router.DELETE("/answers/:answer_id", controllers.DeleteComment)

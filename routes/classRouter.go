@@ -45,6 +45,7 @@ func ClassRoutes(router *gin.Engine) {
 
 		// answer endpoints
 		//router.GET("/questions/:question_id/answers", controllers.GetAllanswers)
+		v2.GET("/classrooms/questions/:question_id/answers", controllers.GetAllAnswers())
 		v2.POST("/classrooms/questions/:question_id/answers", controllers.CreateAnswer())
 		//router.PUT("/answers/:answer_id", controllers.Updateanswer)
 		//router.DELETE("/answers/:answer_id", controllers.DeleteComment)

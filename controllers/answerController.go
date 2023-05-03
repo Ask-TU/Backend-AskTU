@@ -105,7 +105,7 @@ func CreateAnswer() gin.HandlerFunc {
 func GetAllAnswers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		questionId := c.Param("questionId")
+		questionId := c.Param("question_id")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()

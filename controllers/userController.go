@@ -109,6 +109,7 @@ func SignUp() gin.HandlerFunc {
 		user.Token = &token
 		user.Refresh_token = &refreshToken
 		user.Classrooms = []string{}
+		user.Classrooms_id = []string{}
 		user.Notification_id = user.User_id
 
 		resultInsertionNumber, insertErr := Usercollection.InsertOne(ctx, user)
@@ -292,6 +293,7 @@ func UpdateUser() gin.HandlerFunc {
 			"user_id":    oldUser.User_id,
 			"student_id": oldUser.Student_id,
 			"classrooms": user.Classrooms,
+			"classrooms_id": user.Classrooms_id,
 		}
 
 		result, err := Usercollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})

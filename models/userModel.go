@@ -23,4 +23,5 @@ type User struct {
 	Student_id    string             `json:"student_id"`
 	Notification_id string            `json:"notification_id"`
 	Classrooms    []string           `json:"classrooms"`
+	Classrooms_id []string           `json:"classrooms_id"`
 }

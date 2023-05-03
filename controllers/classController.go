@@ -240,10 +240,10 @@ func JoinClasrooms() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		classroom_id := c.Param("classroom_id")
+		classroomid := c.Param("classroom_id")
 		member_id := c.Param("member_id")
 
-		objId, err := primitive.ObjectIDFromHex(classroom_id)
+		objId, err := primitive.ObjectIDFromHex(classroomid)
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, responses.Response{Status: http.StatusBadRequest, Message: "error", Result: map[string]interface{}{"data": err.Error()}})
@@ -291,8 +291,13 @@ func JoinClasrooms() gin.HandlerFunc {
 			return
 		}
 
-		newUserInfomation := []string{classroom_id}
+		newUserInfomation := []string{classroomid}
 		mergeUserInfomation := append(oldUser.Classrooms, newUserInfomation...)
+
+		newUserInfomation2 := []string{oldClass.Tag}
+		mergeClassID := append(oldUser.Classrooms_id, newUserInfomation2...)
+
+		fmt.Println(mergeClassID,"m",mergeUserInfomation)
 		updateInformation := bson.M{
 			"first_name": oldUser.First_name,
 			"last_name":  oldUser.Last_name,
@@ -305,6 +310,7 @@ func JoinClasrooms() gin.HandlerFunc {
 			"user_id":    oldUser.User_id,
 			"student_id": oldUser.Student_id,
 			"classrooms": mergeUserInfomation,
+			"classrooms_id": mergeClassID,
 		}
 
 		result, err = Usercollection.UpdateOne(ctx, bson.M{"_id": objUserId}, bson.M{"$set": updateInformation})

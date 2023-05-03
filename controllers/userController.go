@@ -291,7 +291,7 @@ func UpdateUser() gin.HandlerFunc {
 			"updated_at": time.Now(),
 			"user_id":    oldUser.User_id,
 			"student_id": oldUser.Student_id,
-			"classrooms": oldUser.Classrooms,
+			"classrooms": user.Classrooms,
 		}
 
 		result, err := Usercollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})

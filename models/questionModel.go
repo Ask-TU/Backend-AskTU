@@ -10,6 +10,7 @@ type Question struct {
 	ID         primitive.ObjectID `bson:"_id"`
 	Content    string             `json:"Content"`
 	Owner      string             `json:"owner"`
+	Owner_name   string             `json:"owner_name"`
 	Class_id   string             `json:"class_id"`
 	Created_at time.Time          `json:"created_at"`
 	Updated_at time.Time          `json:"updated_at"`

@@ -62,6 +62,7 @@ func CreateClassroom() gin.HandlerFunc {
 			Class_id:     helpers.GenerateID(),
 			Subject_name: class.Subject_name,
 			Class_owner:  class.Class_owner,
+			Tag: 		class.Tag,
 			Created_at:   time.Now(),
 			Updated_at:   time.Now(),
 			Questions:    class.Questions,

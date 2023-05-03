@@ -48,6 +48,7 @@ func CreateQuestion() gin.HandlerFunc {
 			ID:         primitive.NewObjectID(),
 			Content:    question.Content,
 			Owner:      question.Owner,
+			Owner_name: question.Owner_name,
 			Class_id:   classroom_id,
 			Created_at: time.Now(),
 			Updated_at: time.Now(),

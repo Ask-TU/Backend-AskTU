@@ -68,7 +68,7 @@ func ClassRoutes(router *gin.Engine) {
 		//router.GET("/questions/search", controllers.SearchQuestions)
 		////router.GET("/comments/search", controllers.SearchComments)
 		////router.GET("/classrooms/search", controllers.SearchClassrooms)
-		v2.GET("/classrooms/search", controllers.GlobalSearch())
+		v2.POST("/classrooms/search", controllers.GlobalSearch())
 
 	}
 
